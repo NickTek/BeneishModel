@@ -8,18 +8,6 @@ st.title("Beneish M-Score Calculator")
 
 st.markdown(
     """
-Enter a stock ticker to calculate the Beneish M-Score. Refer to Yahoo Finance to find ticker codes
-
-Examples:
-- AAPL
-- MSFT
-- TCS.NS
-- INFY.NS
-"""
-)
-
-st.markdown(
-    """
     Beneish M-Score
     A Beneish M-socre is a mathematical model that uses 8 financial metrics to arrive at a calculated score which can determine whether or not a company has manipulated its financial statements.
     
@@ -31,7 +19,17 @@ st.markdown(
     This is code written in Python that takes a ticker code from Yahoo finance as input and returns the M-socre.
     """)
 
-
+    st.markdown(
+        """
+    Enter a stock ticker to calculate the Beneish M-Score. Refer to Yahoo Finance to find ticker codes
+    
+    Examples:
+    - AAPL
+    - MSFT
+    - TCS.NS
+    - INFY.NS
+    """
+    )
 ticker = st.text_input("Enter ticker")
 
 if st.button("Calculate"):
