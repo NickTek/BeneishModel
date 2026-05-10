@@ -1,53 +1,54 @@
-import pandas as pd
-    LV_PY = (
-        (
-            BS.loc['Total Non-Current Liabilities', PY]
-            + BS.loc['Total Current Liabilities', PY]
-        )
-        / BS.loc['Total Assets', PY]
+def calculate_beneish_score(BS, PL, CY, PY):
+
+    # DSRI
+    DSR_CY = BS.loc['Accounts Receivable', CY] / PL.loc['Total Revenue', CY]
+    DSR_PY = BS.loc['Accounts Receivable', PY] / PL.loc['Total Revenue', PY]
+    DSRI = DSR_CY / DSR_PY
+
+    # GMI
+    GM_CY = (PL.loc['Total Revenue', CY] - PL.loc['Cost Of Revenue', CY]) / PL.loc['Total Revenue', CY]
+    GM_PY = (PL.loc['Total Revenue', PY] - PL.loc['Cost Of Revenue', PY]) / PL.loc['Total Revenue', PY]
+    GMI = GM_PY / GM_CY
+
+    # AQI
+    AQI = (
+        (BS.loc['Total Assets', CY] - BS.loc['Current Assets', CY]) / BS.loc['Total Assets', CY]
+    ) / (
+        (BS.loc['Total Assets', PY] - BS.loc['Current Assets', PY]) / BS.loc['Total Assets', PY]
     )
 
-    LVGI = LV_CY / LV_PY
+    # SGI
+    SGI = PL.loc['Total Revenue', CY] / PL.loc['Total Revenue', PY]
 
-    # Total Accruals to Total Assets (TATA)
-    Change_WC = (
-        (BS.loc['Total Current Assets', CY] - BS.loc['Total Current Liabilities', CY])
-        -
-        (BS.loc['Total Current Assets', PY] - BS.loc['Total Current Liabilities', PY])
+    # LVGI
+    LVGI = (
+        (BS.loc['Total Liab', CY] / BS.loc['Total Assets', CY]) /
+        (BS.loc['Total Liab', PY] / BS.loc['Total Assets', PY])
     )
 
-    Change_Cash = (
-        BS.loc['Cash And Cash Equivalents', CY]
-        - BS.loc['Cash And Cash Equivalents', PY]
-    )
-
+    # TATA (simplified)
     TATA = (
-        Change_WC
-        - Change_Cash
-        - PL.loc['Depreciation And Amortisation Expenses', CY]
+        (BS.loc['Total Current Assets', CY] - BS.loc['Total Current Liab', CY]) -
+        (BS.loc['Total Current Assets', PY] - BS.loc['Total Current Liab', PY])
     ) / BS.loc['Total Assets', CY]
 
-    # Beneish M-Score
+    # M-Score
     M = (
         -4.84
         + 0.92 * DSRI
         + 0.528 * GMI
         + 0.404 * AQI
         + 0.892 * SGI
-        + 0.115 * DEPI
-        - 0.172 * SGAI
+        - 0.172 * LVGI
         + 4.679 * TATA
-        - 0.327 * LVGI
     )
 
     return {
-        "DSRI": float(DSRI),
-        "GMI": float(GMI),
-        "AQI": float(AQI),
-        "SGI": float(SGI),
-        "DEPI": float(DEPI),
-        "SGAI": float(SGAI),
-        "LVGI": float(LVGI),
-        "TATA": float(TATA),
-        "M_SCORE": float(M),
+        "DSRI": DSRI,
+        "GMI": GMI,
+        "AQI": AQI,
+        "SGI": SGI,
+        "LVGI": LVGI,
+        "TATA": TATA,
+        "M_SCORE": M
     }
