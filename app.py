@@ -4,7 +4,7 @@ from utils.beneish import calculate_beneish_score
 
 st.set_page_config(page_title="Beneish M-Score", layout="wide")
 
-st.title("📊 Beneish M-Score Analyzer (yfinance powered)")
+st.title("📊 Beneish M-Score Analyzer (Stable yfinance version)")
 
 ticker = st.text_input("Enter Stock Ticker (e.g. AAPL, MSFT, TCS.NS)")
 
@@ -18,21 +18,21 @@ if st.button("Calculate M-Score"):
 
             result = calculate_beneish_score(bs, pl, cy, py)
 
-            st.subheader("M-Score")
+            st.subheader("📌 M-Score")
             st.metric("Score", round(result["M_SCORE"], 3))
 
             if result["M_SCORE"] > -2.22:
-                st.error("⚠️ Possible manipulation detected")
+                st.error("⚠️ Possible earnings manipulation")
             else:
                 st.success("✔ Low manipulation risk")
 
-            st.subheader("Ratios")
+            st.subheader("📊 Ratios")
             st.json(result)
 
-            st.subheader("Balance Sheet")
+            st.subheader("🏦 Balance Sheet")
             st.dataframe(bs)
 
-            st.subheader("Income Statement")
+            st.subheader("📈 Income Statement")
             st.dataframe(pl)
 
         except Exception as e:
