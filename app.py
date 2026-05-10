@@ -4,11 +4,11 @@ from utils.beneish import calculate_beneish_score
 
 st.set_page_config(page_title="Beneish M-Score", layout="wide")
 
-st.title("📊 Beneish M-Score Financial Manipulation Detector")
+st.title("Beneish M-Score Calculator")
 
 st.markdown(
     """
-Enter a stock ticker to calculate the Beneish M-Score.
+Enter a stock ticker to calculate the Beneish M-Score. Refer to Yahoo Finance to find ticker codes
 
 Examples:
 - AAPL
