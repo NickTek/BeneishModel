@@ -25,4 +25,4 @@ def parse_moneycontrol(url):
 
 
 def parse_yahoo_finance(url):
-    raise NotImplementedError("Yahoo Finance parsing not implemented yet")
+    raise NotImplementedError("Yahoo Finance not implemented yet")
