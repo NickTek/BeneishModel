@@ -15,7 +15,6 @@ st.markdown(
     
     Read more about this at: https://resource.cdn.icai.org/59639cajournal-may2020-15.pdf [The Chartered Accountant, May 2020]
     
-    About this code
     This is code written in Python that takes a ticker code from Yahoo finance as input and returns the M-socre.
     """)
 
