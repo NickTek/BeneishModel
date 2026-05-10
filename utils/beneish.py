@@ -32,13 +32,17 @@ def calculate_beneish_score(BS, PL, CY, PY):
     GMI = gm_py / (gm_cy + 1e-9)
 
     # ---------------- AQI ----------------
-    ca = safe_get(BS, ["Total Current Assets"], CY)
-    ca_py = safe_get(BS, ["Total Current Assets"], PY)
-    ta = safe_get(BS, ["Total Assets"], CY)
-    ta_py = safe_get(BS, ["Total Assets"], PY)
+   def safe_div(a, b):
+    if pd.isna(a) or pd.isna(b) or b == 0:
+        return 1  # neutral fallback
+    return a / b
 
-    AQI = ((ta - ca) / ta) / ((ta_py - ca_py) / ta_py + 1e-9)
+    CA = safe_get(BS, ["Total Current Assets"], CY)
+    CA_PY = safe_get(BS, ["Total Current Assets"], PY)
+    TA = safe_get(BS, ["Total Assets"], CY)
+    TA_PY = safe_get(BS, ["Total Assets"], PY)
 
+    AQI = safe_div((TA - CA) / TA, (TA_PY - CA_PY) / TA_PY)
     # ---------------- SGI ----------------
     SGI = revenue_cy / (revenue_py + 1e-9)
 
@@ -79,26 +83,31 @@ def calculate_beneish_score(BS, PL, CY, PY):
         TATA = (wc_cy - wc_py) / (ta + 1e-9)
 
     # ---------------- FINAL M-SCORE ----------------
-    M = (
-        -4.84
-        + 0.92 * DSRI
-        + 0.528 * GMI
-        + 0.404 * AQI
-        + 0.892 * SGI
-        + 0.115 * DEPI
-        - 0.172 * SGAI
-        + 4.679 * TATA
-        - 0.327 * LVGI
-    )
+    def clean(x):
+    if pd.isna(x):
+        return 1  # neutral value instead of NaN
+    return x
+       
+    DSRI = clean(DSRI)
+    GMI = clean(GMI)
+    AQI = clean(AQI)
+    SGI = clean(SGI)
+    DEPI = clean(DEPI)
+    SGAI = clean(SGAI)
+    LVGI = clean(LVGI)
+    TATA = clean(TATA)
 
-    return {
-        "DSRI": DSRI,
-        "GMI": GMI,
-        "AQI": AQI,
-        "SGI": SGI,
-        "DEPI": DEPI,
-        "SGAI": SGAI,
-        "LVGI": LVGI,
-        "TATA": TATA,
-        "M_SCORE": M
-    }
+    M = (
+    -4.84
+    + 0.92 * DSRI
+    + 0.528 * GMI
+    + 0.404 * AQI
+    + 0.892 * SGI
+    + 0.115 * DEPI
+    - 0.172 * SGAI
+    + 4.679 * TATA
+    - 0.327 * LVGI
+    )
+    
+    if pd.isna(M):
+    M = 0
