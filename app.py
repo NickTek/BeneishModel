@@ -19,7 +19,7 @@ st.markdown(
     This is code written in Python that takes a ticker code from Yahoo finance as input and returns the M-socre.
     """)
 
-    st.markdown(
+st.markdown(
         """
     Enter a stock ticker to calculate the Beneish M-Score. Refer to Yahoo Finance to find ticker codes
     
