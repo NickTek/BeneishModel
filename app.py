@@ -58,4 +58,4 @@ if st.button("Calculate"):
     
     About this code
     This is code written in Python that takes a ticker code from Yahoo finance as input and returns the M-socre.
-    """
+    """)
