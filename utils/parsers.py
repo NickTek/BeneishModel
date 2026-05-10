@@ -1,28 +1,25 @@
+import yfinance as yf
 import pandas as pd
 
 
-def get_financial_data(url):
-    if "moneycontrol.com" in url:
-        return parse_moneycontrol(url)
+def get_financial_data(ticker: str):
+    stock = yf.Ticker(ticker)
 
-    if "yahoo.com" in url:
-        return parse_yahoo_finance(url)
+    # Financial statements
+    income = stock.financials
+    balance = stock.balance_sheet
+    cashflow = stock.cashflow
 
-    raise ValueError("Unsupported URL")
+    if income.empty or balance.empty:
+        raise ValueError("No financial data found for ticker")
 
+    # Align years (columns)
+    years = list(income.columns)
 
-def parse_moneycontrol(url):
-    tables = pd.read_html(url)
+    if len(years) < 2:
+        raise ValueError("Need at least 2 years of data")
 
-    pl_df = tables[0]
-    bs_df = tables[1]
-
-    years = list(pl_df.columns)
     current_year = years[0]
     previous_year = years[1]
 
-    return bs_df, pl_df, current_year, previous_year
-
-
-def parse_yahoo_finance(url):
-    raise NotImplementedError("Yahoo Finance not implemented yet")
+    return balance, income, current_year, previous_year
