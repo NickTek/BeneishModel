@@ -1,65 +1,57 @@
-import re
-                "balance-sheet"
-            )
+import streamlit as st
 
-        else:
+st.title("Beneish M-Score Financial Manipulation Detector")
 
-            df = get_moneycontrol_statement(url)
+st.markdown(
+    """
+Paste a Yahoo Finance or Moneycontrol financial statement URL.
 
-            st.warning(
-                "Moneycontrol structure differs by company. "
-                "You may need to customize mappings."
-            )
+Examples:
+- https://finance.yahoo.com/quote/AAPL/financials
+- https://www.moneycontrol.com/financials/tcs/profit-lossVI/TCS
+"""
+)
 
-            st.dataframe(df)
-            st.stop()
+url = st.text_input("Financial Statement URL")
 
-        st.subheader("Income Statement")
-        st.dataframe(income_statement)
+if st.button("Calculate Beneish Score"):
+    if not url:
+        st.error("Please enter a valid URL")
+    else:
+        try:
+            with st.spinner("Fetching financial statements..."):
+                bs_df, pl_df, current_year, previous_year = get_financial_data(url)
 
-        st.subheader("Balance Sheet")
-        st.dataframe(balance_sheet)
+            with st.spinner("Calculating Beneish score..."):
+                result = calculate_beneish_score(
+                    bs_df,
+                    pl_df,
+                    current_year,
+                    previous_year,
+                )
 
-        years = list(income_statement.columns)
+            st.success("Calculation completed")
 
-        if len(years) < 2:
-            st.error("At least 2 years of financial data required")
-            st.stop()
+            st.subheader("Beneish M-Score")
+            st.metric("M-Score", round(result["M_SCORE"], 3))
 
-        current_year = years[0]
-        previous_year = years[1]
+            if result["M_SCORE"] > -2.22:
+                st.error(
+                    "Potential earnings manipulation detected (M-Score > -2.22)"
+                )
+            else:
+                st.success(
+                    "Low probability of earnings manipulation (M-Score <= -2.22)"
+                )
 
-        st.write(f"Using Current Year: {current_year}")
-        st.write(f"Using Previous Year: {previous_year}")
+            st.subheader("Component Ratios")
+            st.json(result)
 
-        metrics = calculate_beneish(
-            balance_sheet,
-            income_statement,
-            current_year,
-            previous_year
-        )
+            st.subheader("Balance Sheet Data")
+            st.dataframe(bs_df)
 
-        st.subheader("Beneish Variables")
+            st.subheader("Profit & Loss Data")
+            st.dataframe(pl_df)
 
-        metrics_df = pd.DataFrame(
-            metrics.items(),
-            columns=["Metric", "Value"]
-        )
-
-        st.dataframe(metrics_df)
-
-        m_score = metrics["M-Score"]
-
-        st.header(f"Beneish M-Score: {round(m_score, 2)}")
-
-        if m_score > -2.22:
-            st.error(
-                "Potential earnings manipulation risk detected."
-            )
-        else:
-            st.success(
-                "Company appears less likely to be manipulating earnings."
-            )
-
-    except Exception as e:
-        st.exception(e)
+        except Exception as e:
+            st.exception(e)
