@@ -1,5 +1,7 @@
 import streamlit as st
 
+from utils.parsers import get_financial_data
+
 st.title("Beneish M-Score Financial Manipulation Detector")
 
 st.markdown(
