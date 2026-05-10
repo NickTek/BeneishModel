@@ -8,7 +8,7 @@ st.title("Beneish M-Score Calculator")
 
 st.markdown(
     """
-    Beneish M-Score
+   
     A Beneish M-socre is a mathematical model that uses 8 financial metrics to arrive at a calculated score which can determine whether or not a company has manipulated its financial statements.
     
     A M-socre grearter than -2.22 implies that the financial statements have been manipulated.
