@@ -26,9 +26,9 @@ if st.button("Calculate"):
         st.error("Please enter a ticker.")
     else:
         try:
-            bs, pl, cy, py = get_financial_data(ticker)
+            bs, pl, cf, cy, py = get_financial_data(ticker)
 
-            result = calculate_beneish_score(bs, pl, cy, py)
+            result = calculate_beneish_score(bs, pl, cf, cy, py)
 
             st.subheader("📌 M-Score")
 
