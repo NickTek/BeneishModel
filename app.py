@@ -1,59 +1,39 @@
 import streamlit as st
-
 from utils.parsers import get_financial_data
+from utils.beneish import calculate_beneish_score
 
-st.title("Beneish M-Score Financial Manipulation Detector")
+st.set_page_config(page_title="Beneish M-Score", layout="wide")
 
-st.markdown(
-    """
-Paste a Yahoo Finance or Moneycontrol financial statement URL.
+st.title("📊 Beneish M-Score Analyzer (yfinance powered)")
 
-Examples:
-- https://finance.yahoo.com/quote/AAPL/financials
-- https://www.moneycontrol.com/financials/tcs/profit-lossVI/TCS
-"""
-)
+ticker = st.text_input("Enter Stock Ticker (e.g. AAPL, MSFT, TCS.NS)")
 
-url = st.text_input("Financial Statement URL")
+if st.button("Calculate M-Score"):
 
-if st.button("Calculate Beneish Score"):
-    if not url:
-        st.error("Please enter a valid URL")
+    if not ticker:
+        st.error("Please enter a ticker")
     else:
         try:
-            with st.spinner("Fetching financial statements..."):
-                bs_df, pl_df, current_year, previous_year = get_financial_data(url)
+            bs, pl, cy, py = get_financial_data(ticker)
 
-            with st.spinner("Calculating Beneish score..."):
-                result = calculate_beneish_score(
-                    bs_df,
-                    pl_df,
-                    current_year,
-                    previous_year,
-                )
+            result = calculate_beneish_score(bs, pl, cy, py)
 
-            st.success("Calculation completed")
-
-            st.subheader("Beneish M-Score")
-            st.metric("M-Score", round(result["M_SCORE"], 3))
+            st.subheader("M-Score")
+            st.metric("Score", round(result["M_SCORE"], 3))
 
             if result["M_SCORE"] > -2.22:
-                st.error(
-                    "Potential earnings manipulation detected (M-Score > -2.22)"
-                )
+                st.error("⚠️ Possible manipulation detected")
             else:
-                st.success(
-                    "Low probability of earnings manipulation (M-Score <= -2.22)"
-                )
+                st.success("✔ Low manipulation risk")
 
-            st.subheader("Component Ratios")
+            st.subheader("Ratios")
             st.json(result)
 
-            st.subheader("Balance Sheet Data")
-            st.dataframe(bs_df)
+            st.subheader("Balance Sheet")
+            st.dataframe(bs)
 
-            st.subheader("Profit & Loss Data")
-            st.dataframe(pl_df)
+            st.subheader("Income Statement")
+            st.dataframe(pl)
 
         except Exception as e:
             st.exception(e)
