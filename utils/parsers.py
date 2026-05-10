@@ -1,5 +1,16 @@
 import pandas as pd
 
+import pandas as pd
+
+def get_financial_data(url):
+    if "moneycontrol.com" in url:
+        return parse_moneycontrol(url)
+
+    if "yahoo.com" in url:
+        return parse_yahoo_finance(url)
+
+    raise ValueError("Unsupported URL")
+
 def parse_moneycontrol(url):
     tables = pd.read_html(url)
 
