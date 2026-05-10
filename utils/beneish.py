@@ -1,131 +1,84 @@
+import numpy as np
+import pandas as pd
 from utils.parsers import safe_get
 
 
 def calculate_beneish_score(BS, PL, CY, PY):
 
-    # -----------------------
-    # Revenue / Sales
-    # -----------------------
-    revenue_names = [
-        "Total Revenue",
-        "Operating Revenue",
-        "Revenue",
-    ]
-
+    # ---------------- REVENUE ----------------
+    revenue_names = ["Total Revenue", "Operating Revenue"]
     revenue_cy = safe_get(PL, revenue_names, CY)
     revenue_py = safe_get(PL, revenue_names, PY)
 
-    # -----------------------
-    # DSRI
-    # -----------------------
-    ar_names = [
-        "Accounts Receivable",
-        "Net Receivables",
-    ]
+    # fallback safety
+    revenue_cy = revenue_cy if not pd.isna(revenue_cy) else 1
+    revenue_py = revenue_py if not pd.isna(revenue_py) else 1
 
-    DSR_CY = safe_get(BS, ar_names, CY) / (revenue_cy + 1e-9)
-    DSR_PY = safe_get(BS, ar_names, PY) / (revenue_py + 1e-9)
+    # ---------------- DSRI ----------------
+    ar_names = ["Accounts Receivable", "Net Receivables"]
+    ar_cy = safe_get(BS, ar_names, CY)
+    ar_py = safe_get(BS, ar_names, PY)
 
-    DSRI = DSR_CY / (DSR_PY + 1e-9)
+    DSRI = (ar_cy / revenue_cy) / (ar_py / revenue_py + 1e-9)
 
-    # -----------------------
-    # GMI
-    # -----------------------
-    cost_names = [
-        "Cost Of Revenue",
-        "Cost Of Goods Sold",
-        "Cost of Revenue",
-    ]
-
+    # ---------------- GMI ----------------
+    cost_names = ["Cost Of Revenue", "Cost Of Goods Sold"]
     cost_cy = safe_get(PL, cost_names, CY)
     cost_py = safe_get(PL, cost_names, PY)
 
-    GM_CY = (revenue_cy - cost_cy) / (revenue_cy + 1e-9)
-    GM_PY = (revenue_py - cost_py) / (revenue_py + 1e-9)
+    gm_cy = (revenue_cy - cost_cy) / revenue_cy
+    gm_py = (revenue_py - cost_py) / revenue_py
 
-    GMI = GM_PY / (GM_CY + 1e-9)
+    GMI = gm_py / (gm_cy + 1e-9)
 
-    # -----------------------
-    # AQI
-    # -----------------------
-    current_assets_names = [
-        "Total Current Assets"
-    ]
+    # ---------------- AQI ----------------
+    ca = safe_get(BS, ["Total Current Assets"], CY)
+    ca_py = safe_get(BS, ["Total Current Assets"], PY)
+    ta = safe_get(BS, ["Total Assets"], CY)
+    ta_py = safe_get(BS, ["Total Assets"], PY)
 
-    assets_names = [
-        "Total Assets"
-    ]
+    AQI = ((ta - ca) / ta) / ((ta_py - ca_py) / ta_py + 1e-9)
 
-    CA_CY = safe_get(BS, current_assets_names, CY)
-    CA_PY = safe_get(BS, current_assets_names, PY)
-
-    TA_CY = safe_get(BS, assets_names, CY)
-    TA_PY = safe_get(BS, assets_names, PY)
-
-    AQI = ((TA_CY - CA_CY) / (TA_CY + 1e-9)) / ((TA_PY - CA_PY) / (TA_PY + 1e-9))
-
-    # -----------------------
-    # SGI
-    # -----------------------
+    # ---------------- SGI ----------------
     SGI = revenue_cy / (revenue_py + 1e-9)
 
-    # -----------------------
-    # DEPI
-    # -----------------------
-    dep_names = [
-        "Depreciation",
-        "Depreciation & Amortization",
-        "Depreciation And Amortisation",
-    ]
-
+    # ---------------- DEPI (FIXED) ----------------
+    dep_names = ["Depreciation & Amortization", "Depreciation"]
     dep_cy = safe_get(PL, dep_names, CY)
     dep_py = safe_get(PL, dep_names, PY)
 
-    DEPI = (dep_py / (dep_py + TA_PY + 1e-9)) / (dep_cy / (dep_cy + TA_CY + 1e-9))
+    if pd.isna(dep_cy) or pd.isna(dep_py):
+        DEPI = 1.0
+    else:
+        DEPI = (dep_py / (dep_py + ta_py + 1e-9)) / (dep_cy / (dep_cy + ta + 1e-9))
 
-    # -----------------------
-    # SGAI
-    # -----------------------
-    sga_names = [
-        "Operating Expenses",
-        "Other Expenses",
-        "Selling General Administrative",
-    ]
-
+    # ---------------- SGAI (FIXED) ----------------
+    sga_names = ["Operating Expense", "Operating Expenses", "Other Expenses"]
     sga_cy = safe_get(PL, sga_names, CY)
     sga_py = safe_get(PL, sga_names, PY)
 
-    SGAI = (sga_cy / (revenue_cy + 1e-9)) / (sga_py / (revenue_py + 1e-9))
+    if pd.isna(sga_cy) or pd.isna(sga_py):
+        SGAI = 1.0
+    else:
+        SGAI = (sga_cy / revenue_cy) / (sga_py / revenue_py + 1e-9)
 
-    # -----------------------
-    # LVGI (FIXED ERROR)
-    # -----------------------
-    liab_names = [
-        "Total Liab",
-        "Total Liabilities Net Minority Interest",
-        "Total Liabilities",
-    ]
+    # ---------------- LVGI ----------------
+    liab_names = ["Total Liab", "Total Liabilities Net Minority Interest"]
+    liab_cy = safe_get(BS, liab_names, CY)
+    liab_py = safe_get(BS, liab_names, PY)
 
-    LV_CY = safe_get(BS, liab_names, CY) / (TA_CY + 1e-9)
-    LV_PY = safe_get(BS, liab_names, PY) / (TA_PY + 1e-9)
+    LVGI = (liab_cy / (ta + 1e-9)) / (liab_py / (ta_py + 1e-9) + 1e-9)
 
-    LVGI = LV_CY / (LV_PY + 1e-9)
+    # ---------------- TATA (FIXED PROPERLY) ----------------
+    wc_cy = safe_get(BS, ["Total Current Assets"], CY) - safe_get(BS, ["Total Current Liabilities"], CY)
+    wc_py = safe_get(BS, ["Total Current Assets"], PY) - safe_get(BS, ["Total Current Liabilities"], PY)
 
-    # -----------------------
-    # TATA
-    # -----------------------
-    curr_liab_names = [
-        "Total Current Liabilities"
-    ]
+    if pd.isna(wc_cy) or pd.isna(wc_py):
+        TATA = 0
+    else:
+        TATA = (wc_cy - wc_py) / (ta + 1e-9)
 
-    WC_CY = safe_get(BS, current_assets_names, CY) - safe_get(BS, curr_liab_names, CY)
-    WC_PY = safe_get(BS, current_assets_names, PY) - safe_get(BS, curr_liab_names, PY)
-
-    TATA = (WC_CY - WC_PY) / (TA_CY + 1e-9)
-
-    # -----------------------
-    # M-SCORE
-    # -----------------------
+    # ---------------- FINAL M-SCORE ----------------
     M = (
         -4.84
         + 0.92 * DSRI
